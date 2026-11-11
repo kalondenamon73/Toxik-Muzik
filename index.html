@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b12">
+<meta name="description" content="Toxik Musik — stream, discover, share and upload independent music.">
+<title>Toxik Musik — Independent Music</title>
+<style>
+:root{--bg:#090b12;--surface:#111622;--surface2:#1b2230;--text:#f4f7fb;--muted:#aab4c5;--cyan:#00d5f2;--purple:#9b6dff;--line:#2a3445}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,Arial}
+button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 13px;font-weight:650;background:var(--cyan);color:#07121a}button.secondary{background:var(--surface2);border:1px solid var(--line);color:var(--text)}button:disabled{opacity:.5;cursor:not-allowed}
+header{display:flex;align-items:center;gap:12px;padding:15px max(4%,calc((100% - 1080px)/2));border-bottom:1px solid var(--line);background:#0d111b;flex-wrap:wrap}
+.brand{font-size:24px;font-weight:850;letter-spacing:-1px}.brand span{color:var(--cyan)}.brand b{color:var(--purple)}.spacer{flex:1}
+main{max-width:1080px;margin:auto;padding:22px 4% 150px}.hero{padding:24px;border:1px solid var(--line);background:var(--surface);border-radius:16px}.hero h1{font-size:clamp(26px,5vw,42px);margin:0 0 8px}.hero p{color:var(--muted);margin:0 0 18px}.controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+input,select{background:#0c111b;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:11px;min-width:0}.controls input{flex:1;min-width:170px}.controls select{min-width:130px}
+.titlebar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:24px 0 12px}.titlebar h2{margin:0;font-size:20px}
+.tracklist{display:grid;gap:10px}.track{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:13px}.art{width:58px;height:58px;flex-shrink:0;border-radius:9px;display:grid;place-items:center;background:#172536;color:var(--cyan);font-weight:900;font-size:20px}.meta{flex:1;min-width:0}.meta strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.meta small{display:block;color:var(--muted);margin-top:4px}.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.actions button{font-size:12px;padding:8px 9px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px;margin-top:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.note{font-size:13px;color:var(--muted);line-height:1.55}.hidden{display:none!important}
+#player{position:fixed;z-index:9;bottom:0;left:0;right:0;background:#0e131e;border-top:1px solid var(--line);padding:11px max(4%,calc((100% - 1080px)/2));display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,2fr) auto;gap:12px;align-items:center}#now{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}audio{width:100%;height:38px}
+footer{text-align:center;color:var(--muted);padding:20px}.pill{font-size:11px;border:1px solid #176b7b;color:var(--cyan);padding:4px 8px;border-radius:20px}
+@media(max-width:620px){header{padding:12px 4%}main{padding:15px 4% 165px}.track{align-items:flex-start}.art{width:45px;height:45px}.actions{max-width:105px}.actions button{padding:7px;font-size:11px}#player{grid-template-columns:1fr;gap:4px;padding:8px 4%}#now{font-size:13px}audio{height:32px}}
+</style>
+</head>
+<body>
+<header><div class="brand">Toxik <span>Musik</span><b>.</b></div><span class="pill">INDEPENDENT MUSIC</span><div class="spacer"></div><button class="secondary" id="shareSite">Share site</button><button id="authToggle">Sign in / Upload</button></header>
+<main>
+<section class="hero"><h1>Music lives here.</h1><p>Stream Toxic's featured tracks, discover community releases, and share music with friends.</p>
+<div class="controls"><input id="search" placeholder="Search tracks or artists" aria-label="Search music"><select id="genre" aria-label="Filter genre"><option value="">All genres</option><option>Afro</option><option>Hip-Hop</option><option>R&B</option><option>Pop</option><option>Gospel</option><option>Other</option></select><button class="secondary" id="reload">Refresh</button></div></section>
+<section class="titlebar"><h2>Featured — Toxic</h2><span class="pill" id="featuredCount">5 songs included</span></section><div class="tracklist" id="featured"></div>
+<section class="titlebar"><h2>Community music</h2><span class="pill" id="communityCount">online tracks</span></section><div class="tracklist" id="community"><p class="note">Community uploads require Supabase setup. Featured tracks work locally immediately.</p></div>
+<section class="panel hidden" id="authPanel"><div class="titlebar"><h2 id="authTitle">Sign in</h2><button class="secondary" id="closeAuth">Close</button></div><div class="grid"><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password (6+ characters)"></div><div class="controls"><button id="authSubmit">Sign in</button><button class="secondary" id="switchAuth">Create account</button><button class="secondary hidden" id="signOut">Sign out</button></div><p class="note" id="authMsg"></p></section>
+<section class="panel hidden" id="uploadPanel"><div class="titlebar"><h2>Upload a track</h2><span class="pill">MP3 · max 25 MB</span></div><div class="grid"><input id="songTitle" placeholder="Track title"><input id="artist" placeholder="Artist name"><select id="songGenre"><option>Afro</option><option>Hip-Hop</option><option>R&B</option><option>Pop</option><option>Gospel</option><option>Other</option></select><input id="cover" type="file" accept="image/jpeg,image/png,image/webp"><input id="audioFile" type="file" accept="audio/mpeg,.mp3"></div><div class="controls"><button id="upload">Upload music</button></div><p class="note" id="uploadMsg">Upload only tracks you own or are licensed to distribute.</p></section>
+<section class="panel"><h2>Your favorites</h2><p class="note">Favorites are saved in this browser on this device.</p><div class="controls"><button class="secondary" id="favMode">Show favorites</button><button class="secondary" id="allMode">Show all</button></div></section>
+<footer>Toxik Musik · Independent artists, one community.</footer>
+</main>
+<div id="player"><div id="now">Select a song to play</div><audio id="audio" controls preload="metadata"></audio><button class="secondary" id="shareCurrent">Share track</button></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Backend optional for offline featured-song playback. Add Supabase credentials to enable accounts and public uploads. */
+const SUPABASE_URL="YOUR_SUPABASE_URL",SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY";
+const bundled=[
+{id:"local-naxxy",title:"Naxxy",artist:"Toxic",genre:"Other",audio_url:"music/naxxy.mp3",local:true},
+{id:"local-lero",title:"Lero Lokha (Demo)",artist:"Toxic",genre:"Afro",audio_url:"music/Toxic - lero lokha[Demo].mp3",local:true},
+{id:"local-freestyle",title:"Freestyle",artist:"Toxic",genre:"Hip-Hop",audio_url:"music/TOXIC - FREESTYLE.mp3",local:true},
+{id:"local-close",title:"Close Enough",artist:"Toxic",genre:"R&B",audio_url:"music/Toxic - Close enough [Prod. Highest].mp3",local:true},
+{id:"local-polota",title:"Polota",artist:"Toxic",genre:"Afro",audio_url:"music/polota.mp3",local:true}
+];
+let db=null,user=null,communityTracks=[],favorites=JSON.parse(localStorage.getItem("toxik_favs")||"[]"),favMode=false,current=null,authMode="signin";
+const $=id=>document.getElementById(id);
+function button(label,cls,fn){let b=document.createElement("button");b.textContent=label;b.className=cls||"";b.onclick=fn;return b}
+function shareUrl(t){let u=new URL(location.href);u.search="";u.searchParams.set("track",t.id);return u.href}
+async function share(t){let url=shareUrl(t),txt=`${t.artist} — ${t.title} on Toxik Musik`;if(navigator.share){try{await navigator.share({title:t.title,text:txt,url});return}catch(e){if(e.name==="AbortError")return}}try{await navigator.clipboard.writeText(url);alert("Link copied to clipboard")}catch(e){prompt("Copy link",url)}}
+function download(t){let a=document.createElement("a");a.href=t.audio_url;a.download=`${t.artist} - ${t.title}.mp3`;a.target="_blank";a.rel="noopener";document.body.append(a);a.click();a.remove()}
+function toggleFav(t){favorites=favorites.includes(t.id)?favorites.filter(i=>i!==t.id):favorites.concat(t.id);localStorage.setItem("toxik_favs",JSON.stringify(favorites));render()}
+function play(t){current=t;$("now").textContent=`${t.artist} — ${t.title}`;$("audio").src=t.audio_url;$("audio").play().catch(()=>{})}
+function card(t){let el=document.createElement("article");el.className="track";let art=document.createElement("div");art.className="art";art.textContent="TM";let meta=document.createElement("div");meta.className="meta";let strong=document.createElement("strong");strong.textContent=t.title;let small=document.createElement("small");small.textContent=`${t.artist} · ${t.genre||"Other"}${t.local?" · Featured":""}`;meta.append(strong,small);let actions=document.createElement("div");actions.className="actions";actions.append(button("Play","",()=>play(t)),button(favorites.includes(t.id)?"♥":"♡","secondary",()=>toggleFav(t)),button("Share","secondary",()=>share(t)),button("Download","secondary",()=>download(t)));el.append(art,meta,actions);return el}
+function render(){
+ const q=$("search").value.toLowerCase(),g=$("genre").value;
+ const all=[...bundled,...communityTracks],filter=t=>(!favMode||favorites.includes(t.id))&&(!g||t.genre===g)&&(`${t.title} ${t.artist} ${t.genre}`.toLowerCase().includes(q));
+ let f=bundled.filter(filter),c=communityTracks.filter(filter);
+ $("featured").replaceChildren();$("community").replaceChildren();
+ f.length?f.forEach(t=>$("featured").append(card(t))):$("featured").textContent="No featured songs match.";
+ c.length?c.forEach(t=>$("community").append(card(t))):$("community").textContent=db?"No community tracks match yet.":"Community uploads show after Supabase setup.";
+ $("featuredCount").textContent=f.length+" songs";$("communityCount").textContent=c.length+" tracks";
+}
+async function init(){
+ if(SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("YOUR_")&&SUPABASE_ANON_KEY&&!SUPABASE_ANON_KEY.includes("YOUR_")&&window.supabase){
+ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const {data}=await db.auth.getSession();user=data.session?.user||null;db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;uiAuth()});uiAuth();await loadCommunity();
+ }else{$("uploadMsg").textContent="Featured songs are ready. To enable public accounts/uploads, configure Supabase in this file and run setup.sql."}
+ render();let id=new URLSearchParams(location.search).get("track");if(id){let t=[...bundled,...communityTracks].find(t=>t.id===id);if(t)play(t)}
+}
+async function loadCommunity(){if(!db)return;const {data,error}=await db.from("tracks").select("*").order("created_at",{ascending:false}).limit(200);if(error){$("community").textContent="Community loading error: "+error.message;return}communityTracks=data||[];render()}
+function uiAuth(){$("authToggle").textContent=user?"Account":"Sign in / Upload";$("uploadPanel").classList.toggle("hidden",!user);$("signOut").classList.toggle("hidden",!user);if(user){$("authPanel").classList.add("hidden");$("authMsg").textContent="Signed in: "+user.email}}
+$("authToggle").onclick=()=>{$("authPanel").classList.toggle("hidden");$("authTitle").textContent=authMode==="signin"?"Sign in":"Create account";$("authSubmit").textContent=authMode==="signin"?"Sign in":"Create account"};
+$("closeAuth").onclick=()=> $("authPanel").classList.add("hidden");
+$("switchAuth").onclick=()=>{authMode=authMode==="signin"?"signup":"signin";$("authTitle").textContent=authMode==="signin"?"Sign in":"Create account";$("authSubmit").textContent=authMode==="signin"?"Sign in":"Create account";$("switchAuth").textContent=authMode==="signin"?"Create account":"I have an account"};
+$("authSubmit").onclick=async()=>{if(!db){$("authMsg").textContent="Supabase is not configured yet.";return}let email=$("email").value.trim(),password=$("password").value;if(!email||password.length<6){$("authMsg").textContent="Enter email and password (minimum 6 characters).";return}let r=authMode==="signin"?await db.auth.signInWithPassword({email,password}):await db.auth.signUp({email,password});$("authMsg").textContent=r.error?r.error.message:(authMode==="signup"?"Account created. Confirm email if requested.":"Signed in.");if(!r.error){user=r.data.user;uiAuth()}};
+$("signOut").onclick=async()=>{await db.auth.signOut();user=null;uiAuth()};
+$("upload").onclick=async()=>{if(!db||!user){$("uploadMsg").textContent="Please configure Supabase and sign in.";return}
+let title=$("songTitle").value.trim(),artist=$("artist").value.trim(),file=$("audioFile").files[0],cover=$("cover").files[0],genre=$("songGenre").value;
+if(!title||!artist||!file){$("uploadMsg").textContent="Title, artist, and MP3 are required.";return}if(file.size>25*1024*1024){$("uploadMsg").textContent="File exceeds 25 MB.";return}
+$("uploadMsg").textContent="Uploading audio…";const safe=n=>n.replace(/[^a-zA-Z0-9._-]/g,"_"),path=user.id+"/"+Date.now()+"_"+safe(file.name);
+let up=await db.storage.from("music").upload(path,file,{contentType:"audio/mpeg"});if(up.error){$("uploadMsg").textContent=up.error.message;return}
+let audio_url=db.storage.from("music").getPublicUrl(path).data.publicUrl,cover_url=null;
+if(cover){if(cover.size>5*1024*1024){$("uploadMsg").textContent="Cover exceeds 5 MB; audio uploaded but cover rejected.";return}let cp=user.id+"/"+Date.now()+"_"+safe(cover.name),cu=await db.storage.from("covers").upload(cp,cover);if(cu.error){$("uploadMsg").textContent=cu.error.message;return}cover_url=db.storage.from("covers").getPublicUrl(cp).data.publicUrl}
+let ins=await db.from("tracks").insert({user_id:user.id,title,artist,genre,audio_url,cover_url,plays:0});if(ins.error){$("uploadMsg").textContent=ins.error.message;return}
+$("uploadMsg").textContent="Track uploaded successfully.";["songTitle","artist","audioFile","cover"].forEach(id=>$(id).value="");await loadCommunity()};
+$("shareSite").onclick=async()=>{let url=location.href.split("?")[0];if(navigator.share){try{await navigator.share({title:"Toxik Musik",text:"Stream and discover independent music on Toxik Musik.",url});return}catch(e){if(e.name==="AbortError")return}}try{await navigator.clipboard.writeText(url);alert("Site link copied")}catch(e){prompt("Copy site link",url)}};
+$("shareCurrent").onclick=()=>current?share(current):alert("Start playing a song first.");
+$("search").oninput=render;$("genre").onchange=render;$("reload").onclick=loadCommunity;$("favMode").onclick=()=>{favMode=true;render()};$("allMode").onclick=()=>{favMode=false;render()};
+init();
+</script>
+</body></html>
